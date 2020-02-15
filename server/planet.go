@@ -21,14 +21,23 @@ type Planeta struct {
 
 // PlanetHandler analisa o request e delega para função adequada
 func PlanetHandler(w http.ResponseWriter, r *http.Request) {
-	sid := strings.TrimPrefix(r.URL.Path, "/planet/")
-	id, _ := strconv.Atoi(sid)
 
 	switch {
-	case r.Method == "GET" && id > 0:
-		planetPorID(w, r, id)
 	case r.Method == "GET":
-		planetTodos(w, r)
+
+		url := strings.TrimPrefix(r.URL.Path, "/planet/")
+		id, _ := strconv.Atoi(url)
+		pageNumber := strings.TrimPrefix(url, "page/")
+		var _, err = strconv.Atoi(pageNumber)
+		page, _ := strconv.Atoi(pageNumber)
+
+		if id > 0 {
+			planetPorID(w, r, id)
+		} else if err != nil {
+			planetPorNome(w, r, url)
+		} else {
+			planetTodos(w, r, page)
+		}
 	default:
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprintf(w, "Desculpa... :(")
@@ -52,15 +61,34 @@ func planetPorID(w http.ResponseWriter, r *http.Request, id int) {
 	fmt.Fprint(w, string(json))
 }
 
-func planetTodos(w http.ResponseWriter, r *http.Request) {
+func planetPorNome(w http.ResponseWriter, r *http.Request, id string) {
+	db, err := sql.Open("mysql", "root:@/desafioGO")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer db.Close()
+	var p Planeta
+
+	db.QueryRow("SELECT ID, PLANET_NAME, PLANET_TERRAIN, PLANET_FILMS FROM planets WHERE PLANET_NAME = ?", id).Scan(&p.ID, &p.PLANET_NAME, &p.PLANET_TERRAIN, &p.PLANET_FILMS)
+
+	json, _ := json.Marshal(p)
+
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprint(w, string(json))
+}
+
+func planetTodos(w http.ResponseWriter, r *http.Request, page int) {
 	db, err := sql.Open("mysql", "root:@/desafioGO")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
-	rows, _ := db.Query("SELECT ID, PLANET_NAME, PLANET_FILMS, PLANET_TERRAIN FROM planets")
+	var limit = 10
+	var OFFSET = page * limit
 
+	rows, _ := db.Query("SELECT ID, PLANET_NAME, PLANET_FILMS, PLANET_TERRAIN FROM planets limit ? OFFSET ?", limit, OFFSET)
 	defer rows.Close()
 
 	var planetas []Planeta
