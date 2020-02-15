@@ -21,12 +21,12 @@ type Planeta struct {
 
 // PlanetHandler analisa o request e delega para função adequada
 func PlanetHandler(w http.ResponseWriter, r *http.Request) {
+	url := strings.TrimPrefix(r.URL.Path, "/planet/")
+	id, _ := strconv.Atoi(url)
 
 	switch {
 	case r.Method == "GET":
 
-		url := strings.TrimPrefix(r.URL.Path, "/planet/")
-		id, _ := strconv.Atoi(url)
 		pageNumber := strings.TrimPrefix(url, "page/")
 		var _, err = strconv.Atoi(pageNumber)
 		page, _ := strconv.Atoi(pageNumber)
@@ -38,6 +38,8 @@ func PlanetHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			planetTodos(w, r, page)
 		}
+	case r.Method == "DELETE":
+		delete(w, r, id)
 	default:
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprintf(w, "Desculpa... :(")
@@ -102,4 +104,25 @@ func planetTodos(w http.ResponseWriter, r *http.Request, page int) {
 
 	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprint(w, string(json))
+}
+
+func delete(w http.ResponseWriter, r *http.Request, id int) {
+	db, err := sql.Open("mysql", "root:@/desafioGO")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer db.Close()
+	res, err := db.Exec("DELETE FROM planets WHERE ID = ?", id)
+
+	if err == nil {
+		count, err := res.RowsAffected()
+		if err != nil {
+			fmt.Fprint(w, string("Erro ao tentar deletar planeta!"))
+		} else if count > 0 {
+			fmt.Fprint(w, string("Planeta deletado com sucesso!"))
+		} else {
+			fmt.Fprint(w, string("Nenhum planeta encontrado!"))
+		}
+	}
 }
