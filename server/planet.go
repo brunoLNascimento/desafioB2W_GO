@@ -39,7 +39,13 @@ func PlanetHandler(w http.ResponseWriter, r *http.Request) {
 			planetTodos(w, r, page)
 		}
 	case r.Method == "DELETE":
+		if id <= 0 {
+			fmt.Fprint(w, string("O ID planeta é obrigatório!"))
+			return
+		}
 		delete(w, r, id)
+	case r.Method == "POST":
+		savePlanet(w, r)
 	default:
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprintf(w, "Desculpa... :(")
@@ -107,6 +113,7 @@ func planetTodos(w http.ResponseWriter, r *http.Request, page int) {
 }
 
 func delete(w http.ResponseWriter, r *http.Request, id int) {
+
 	db, err := sql.Open("mysql", "root:@/desafioGO")
 	if err != nil {
 		log.Fatal(err)
@@ -125,4 +132,73 @@ func delete(w http.ResponseWriter, r *http.Request, id int) {
 			fmt.Fprint(w, string("Nenhum planeta encontrado!"))
 		}
 	}
+}
+
+func savePlanet(w http.ResponseWriter, r *http.Request) {
+
+	var p Planeta
+
+	// Try to decode the request body into the struct. If there is an error,
+	// respond to the client with the error message and a 400 status code.
+	err := json.NewDecoder(r.Body).Decode(&p)
+
+	if err != nil {
+		fmt.Println("err => ", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if p.PLANET_NAME == "" {
+		fmt.Fprint(w, string("Nome planeta é obrigatório!"))
+	}
+
+	db, err := sql.Open("mysql", "root:@/desafioGO")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer db.Close()
+	stmt, err := db.Prepare("INSERT FROM planets (PLANET_NAME, PLANET_TERRAIN,PLANET_FILMS) VALUES (?,?,?)")
+	stmt.Exec(p.PLANET_NAME)
+	stmt.Exec(p.PLANET_TERRAIN)
+	stmt.Exec(p.PLANET_FILMS)
+
+	// stmt, _ := db.Prepare("insert into usuarios(nome) values(?)")
+	// stmt.Exec("Maria")
+	// stmt.Exec("João")
+
+	res, _ := stmt.Exec(p)
+
+	id, _ := res.LastInsertId()
+	fmt.Println(id)
+
+	linhas, _ := res.RowsAffected()
+	fmt.Println(linhas)
+
+	/*func Insert(w http.ResponseWriter, r *http.Request) {
+		db := dbConn()
+		if r.Method == "POST" {
+			name := r.FormValue("name")
+			city := r.FormValue("city")
+			insForm, err := db.Prepare("INSERT INTO Employee(name, city) VALUES(?,?)")
+			if err != nil {
+				panic(err.Error())
+			}
+			insForm.Exec(name, city)
+			log.Println("INSERT: Name: " + name + " | City: " + city)
+		}
+		defer db.Close()
+		http.Redirect(w, r, "/", 301)
+	}
+
+	if err == nil {
+		count, err := res.RowsAffected()
+		if err != nil {
+			fmt.Fprint(w, string("Erro ao tentar deletar planeta!"))
+		} else if count > 0 {
+			fmt.Fprint(w, string("Planeta deletado com sucesso!"))
+		} else {
+			fmt.Fprint(w, string("Nenhum planeta encontrado!"))
+		}
+	}*/
 }
