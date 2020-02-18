@@ -135,70 +135,35 @@ func delete(w http.ResponseWriter, r *http.Request, id int) {
 }
 
 func savePlanet(w http.ResponseWriter, r *http.Request) {
-
 	var p Planeta
 
-	// Try to decode the request body into the struct. If there is an error,
-	// respond to the client with the error message and a 400 status code.
 	err := json.NewDecoder(r.Body).Decode(&p)
 
 	if err != nil {
-		fmt.Println("err => ", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	if p.PLANET_NAME == "" {
 		fmt.Fprint(w, string("Nome planeta é obrigatório!"))
+		return
 	}
 
 	db, err := sql.Open("mysql", "root:@/desafioGO")
 	if err != nil {
+		fmt.Println("ERRO AQUI =>")
 		log.Fatal(err)
 	}
 
 	defer db.Close()
-	stmt, err := db.Prepare("INSERT FROM planets (PLANET_NAME, PLANET_TERRAIN,PLANET_FILMS) VALUES (?,?,?)")
-	stmt.Exec(p.PLANET_NAME)
-	stmt.Exec(p.PLANET_TERRAIN)
-	stmt.Exec(p.PLANET_FILMS)
 
-	// stmt, _ := db.Prepare("insert into usuarios(nome) values(?)")
-	// stmt.Exec("Maria")
-	// stmt.Exec("João")
-
-	res, _ := stmt.Exec(p)
-
-	id, _ := res.LastInsertId()
-	fmt.Println(id)
-
-	linhas, _ := res.RowsAffected()
-	fmt.Println(linhas)
-
-	/*func Insert(w http.ResponseWriter, r *http.Request) {
-		db := dbConn()
-		if r.Method == "POST" {
-			name := r.FormValue("name")
-			city := r.FormValue("city")
-			insForm, err := db.Prepare("INSERT INTO Employee(name, city) VALUES(?,?)")
-			if err != nil {
-				panic(err.Error())
-			}
-			insForm.Exec(name, city)
-			log.Println("INSERT: Name: " + name + " | City: " + city)
-		}
-		defer db.Close()
-		http.Redirect(w, r, "/", 301)
-	}
+	stmt, err := db.Prepare("INSERT into planets (ID, PLANET_NAME, PLANET_TERRAIN,PLANET_FILMS) VALUES (DEFAULT,?,?,?)")
+	stmt.Exec(p.PLANET_NAME, p.PLANET_TERRAIN, p.PLANET_FILMS)
+	_, err = stmt.Exec(p)
 
 	if err == nil {
-		count, err := res.RowsAffected()
-		if err != nil {
-			fmt.Fprint(w, string("Erro ao tentar deletar planeta!"))
-		} else if count > 0 {
-			fmt.Fprint(w, string("Planeta deletado com sucesso!"))
-		} else {
-			fmt.Fprint(w, string("Nenhum planeta encontrado!"))
-		}
-	}*/
+		fmt.Fprint(w, string("Erro ao salvar planeta!"))
+	} else {
+		fmt.Fprint(w, string("Planeta salvo com sucesso!"))
+	}
 }
