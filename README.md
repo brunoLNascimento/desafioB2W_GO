@@ -1,6 +1,30 @@
-desafioB2W_GO
+# Desafio B2W
 
-falta 
-    salvar
-    update
-    e usar a api da swapi
+[![N|Solid](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTaRD4whXvduIJ3F7jl2ZV-wPDYo4fW26vSrSh5t3tOxH-OxfEMtw)](https://nodesource.com/products/nsolid)
+
+# Requisitos:
+
+- A API deve ser REST
+- Cada planeta, os seguintes dados devem ser obtidos do banco de dados da aplicação, sendo inserido manualmente:
+Nome
+Clima
+Terreno
+- Para cada planeta também devemos ter a quantidade de aparições em filmes, que podem ser obtidas pela API pública do Star Wars: https://swapi.co/
+
+# Funcionalidades desejadas: 
+
+- Adicionar um planeta (com nome, clima e terreno)
+- Listar Planetas
+- Buscar por nome
+- Buscar por ID
+- Remover planeta
+
+Linguagem utilizada: GO
+
+Favor ler o arquivo endPoints
+  
+### Rodando o sistema
+
+```sh
+$ go run *go -- Rodar o sistema.
+```
