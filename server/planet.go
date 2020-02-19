@@ -50,7 +50,7 @@ func PlanetHandler(w http.ResponseWriter, r *http.Request) {
 		updatePlanet(w, r)
 	default:
 		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(w, "Desculpa... :(")
+		fmt.Fprintf(w, "Rota não mapeada...")
 	}
 }
 
@@ -81,11 +81,15 @@ func planetPorNome(w http.ResponseWriter, r *http.Request, id string) {
 	var p Planeta
 
 	db.QueryRow("SELECT ID, PLANET_NAME, PLANET_TERRAIN, PLANET_FILMS FROM planets WHERE PLANET_NAME = ?", id).Scan(&p.ID, &p.PLANET_NAME, &p.PLANET_TERRAIN, &p.PLANET_FILMS)
-
 	json, _ := json.Marshal(p)
 
-	w.Header().Set("Content-Type", "application/json")
-	fmt.Fprint(w, string(json))
+	if p.ID == 0 {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(w, "Nenhum resultado encontrado para a busca")
+	} else {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(w, string(json))
+	}
 }
 
 func planetTodos(w http.ResponseWriter, r *http.Request, page int) {
