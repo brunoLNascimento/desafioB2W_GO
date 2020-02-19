@@ -1,0 +1,35 @@
+OBS: PÊNDENCIAS: Não consegui tratar o retorno do SWAPI  
+
+1) Buscar planeta pelo nome 
+    GET : localhost:3000/planet/{nomePlaneta}
+
+2) Buscar todos os planetas
+    GET : localhost:3000/planet/page/0
+    Paginação: Limitada a 10 planetas por página
+
+3) Buscar planeta por ID
+    GET : localhost:3000/planet/{id}
+
+4) Salvar Planeta
+    POST : localhost:3000/planet/
+
+    contrato do body:
+    {
+        "planeta" : "testeNome",
+	    "qtsFilms": 5,
+	    "tipoTerreno": "testeClima"
+    }
+
+5) Deletar um planeta
+    DELETE : localhost:3000/planet/{id}
+
+6) Atualizar um planeta
+    PUT : localhost:3000/planet/
+
+    contrato do body:
+    {
+        "ID": 1,
+        "planeta" : "nomePlaneta",
+        "qtsFilms": 14,
+        "tipoTerreno": "desconhecido"
+    }
