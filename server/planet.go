@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
@@ -152,22 +151,9 @@ func savePlanet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var url = "https://swapi.co/api/planets/?search=" + p.PLANET_NAME
-
-	response, err := http.Get(url)
-	if err != nil {
-		// handle error
-	}
-	defer response.Body.Close()
-	body, err := ioutil.ReadAll(response.Body)
-
-	if body != nil {
-
-		var result map[string]interface{}
-		json.Unmarshal(body, &result)
-		var teste = result["results[climate]"]
-		fmt.Println("teste => ", teste)
-
+	if p.PLANET_TERRAIN == "" {
+		fmt.Fprint(w, string("Tipo do terro do planeta é obrigatório!"))
+		return
 	}
 
 	db, err := sql.Open("mysql", "root:@/desafioGO")
