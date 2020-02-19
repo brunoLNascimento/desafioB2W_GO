@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
@@ -46,6 +47,8 @@ func PlanetHandler(w http.ResponseWriter, r *http.Request) {
 		delete(w, r, id)
 	case r.Method == "POST":
 		savePlanet(w, r)
+	case r.Method == "PUT":
+		updatePlanet(w, r)
 	default:
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprintf(w, "Desculpa... :(")
@@ -149,6 +152,24 @@ func savePlanet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var url = "https://swapi.co/api/planets/?search=" + p.PLANET_NAME
+
+	response, err := http.Get(url)
+	if err != nil {
+		// handle error
+	}
+	defer response.Body.Close()
+	body, err := ioutil.ReadAll(response.Body)
+
+	if body != nil {
+
+		var result map[string]interface{}
+		json.Unmarshal(body, &result)
+		var teste = result["results[climate]"]
+		fmt.Println("teste => ", teste)
+
+	}
+
 	db, err := sql.Open("mysql", "root:@/desafioGO")
 	if err != nil {
 		fmt.Println("ERRO AQUI =>")
@@ -165,5 +186,38 @@ func savePlanet(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, string("Erro ao salvar planeta!"))
 	} else {
 		fmt.Fprint(w, string("Planeta salvo com sucesso!"))
+	}
+}
+
+func updatePlanet(w http.ResponseWriter, r *http.Request) {
+	var p Planeta
+
+	err := json.NewDecoder(r.Body).Decode(&p)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if p.ID < 0 {
+		fmt.Fprint(w, string("Id do planeta é obrigatório!"))
+		return
+	}
+
+	db, err := sql.Open("mysql", "root:@/desafioGO")
+	if err != nil {
+		fmt.Println("ERRO AQUI =>")
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	res, err := db.Exec("UPDATE planets set PLANET_NAME = ?, PLANET_TERRAIN = ?, PLANET_FILMS = ? where ID = ?", p.PLANET_NAME, p.PLANET_TERRAIN, p.PLANET_FILMS, p.ID)
+
+	count, err := res.RowsAffected()
+	if err != nil {
+		fmt.Fprint(w, string("Erro ao tentar deletar planeta!"))
+	} else if count > 0 {
+		fmt.Fprint(w, string("Planeta atualizado com sucesso!"))
+	} else {
+		fmt.Fprint(w, string("Planeta não foi atualizado, favor mude algum parâmetro!"))
 	}
 }
